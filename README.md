@@ -93,3 +93,15 @@ Due to large file sizes and limited computing power, the ETL and analysis workfl
        ├──► Figure 1: CPC Technology Section Citation Impact
        ├──► Figure 2: AIA 2011 Reform Claims Policy Trends (2006–2016)
        └──► Figure 3: Top 5% Breakthrough Share Trajectory (2000–2020)
+```
+---
+
+## Use of Artificial Intelligence
+
+Large language models (LLMs) were utilized throughout the lifecycle of this project. Specifically, AI tools assisted with:
+
+- Data pipeline optimization (refactoring memory-efficient DuckDB queries and chunked PyArrow conversions)
+- Formatting and debugging visualizing code
+- Refining formatting and word-choice utilized in documentation and figure descriptions
+
+All underlying empirical methodology, data processing logic, analytical results, and interpretations were reviewed, verified, and finalized by the author.
