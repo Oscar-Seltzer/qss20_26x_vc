@@ -1,48 +1,40 @@
-# data set information
+# dataset summary and variable definitions
 
+# total observations: 500,000 patents
+# time period: 2000 - 2020 grant years
+# source: uspto database matched with venture capital records
 
+# variables
+# patent_id: unique patent identifier
+# vc_backed: 1 if assignee received venture capital, 0 otherwise
+# grant_year: calendar year patent was granted
+# normalized_forward_citations: focal citations divided by mean of cpc subclass and grant year cohort
+# npl_ratio: non-patent literature / (backward citations + non-patent literature)
+# total_claims: count of patent claims
+# log_claims: ln(total_claims + 1)
 
-# Dataset Overview
-# Total Observations: 500,000 patents randomly sampled from the 2000-2020 cohort.
-# Time Range: 2000 to 2020 (Grant Years).
-# Source: USPTO patent database merged with historical venture capital financing records.
+# summary statistics
+# variable                      count    mean  std dev   min   25%   50%   75%     max
+# normalized_forward_citations  8012.00  1.00     2.56  0.00  0.00  0.23  1.09  111.47
+# npl_ratio                     7871.00  0.37     0.35  0.00  0.00  0.29  0.67    1.00
+# total_claims                 500000.00 16.15    14.08  0.00  7.00 14.00 21.00  683.00
 
-# Variables Overview:
-# - patent_id: Unique string identifier for each granted patent.
-# - vc_backed: Binary indicator (1 if the assignee received venture capital backing, 0 otherwise).
-# - grant_year: Four-digit integer representing the calendar year the patent was officially granted.
-# - normalized_forward_citations: Focal patent's raw forward citations divided by the mean citation count 
-#   of its specific CPC subclass and grant-year cohort, controlling for technology and age life-cycle biases.
-# - npl_ratio: Non-Patent Literature citations divided by the sum of backward patent citations and NPL citations. 
-#   This serves as a standard proxy for science intensity (proximity to foundational academic research).
-# - total_claims: Total count of legal claims associated with the patent, capturing legal breadth and scope.
-# - log_claims: Natural transformation, LN(total_claims + 1), used to correct for the heavy right-tail skewness.
+# group mean comparisons (welch's t-test)
 
-# Summary Statistics Table:
-# Variable                     Count        Mean     Std Dev     Min     25%     50%     75%       Max
-# --------------------------------------------------------------------------------------------------
-# normalized_forward_citations   8,012        1.00        2.56    0.00    0.00    0.23    1.09    111.47
-# npl_ratio                    7,871        0.37        0.35    0.00    0.00    0.29    0.67      1.00
-# total_claims               500,000       16.15       14.08    0.00    7.00   14.00   21.00    683.00
+# normalized_forward_citations
+# vc-backed mean: 2.026 (n = 148)
+# non-vc mean:    0.981 (n = 7864)
+# t-statistic:    2.49
+# p-value:        0.0140
 
+# total_claims
+# vc-backed mean: 22.230 (n = 9536)
+# non-vc mean:    16.032 (n = 490464)
+# t-statistic:    29.71
+# p-value:        1.10e-185
 
-
-#aggregatged t-tests of vc vs non-vc
-
-# 1. Dependent Variable: Citation Impact (normalized_forward_citations)
-#   - VC-Backed Mean: 2.026 (n = 148)
-#   - Non-VC Mean:    0.981 (n = 7,864)
-#   - T-Statistic:    2.49
-#   - P-value:        0.0140 (Statistically significant at the 5% level)
-
-# 2. Dependent Variable: Claim Counts (total_claims)
-#   - VC-Backed Mean: 22.230 (n = 9,536)
-#   - Non-VC Mean:    16.032 (n = 490,464)
-#   - T-Statistic:    29.71
-#   - P-value:        1.10e-185 (Highly statistically significant)
-
-# 3. Dependent Variable: Science Intensity (npl_ratio)
-#   - VC-Backed Mean: 0.446 (n = 146)
-#   - Non-VC Mean:    0.369 (n = 7,725)
-#   - T-Statistic:    2.87
-#   - P-value:        0.0047 (Statistically significant at the 1% level)
+# npl_ratio
+# vc-backed mean: 0.446 (n = 146)
+# non-vc mean:    0.369 (n = 7725)
+# t-statistic:    2.87
+# p-value:        0.0047
