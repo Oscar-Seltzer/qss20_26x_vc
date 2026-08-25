@@ -520,7 +520,7 @@ export default function Home() {
           {/* ── Hero ── */}
           <section className="hero" ref={heroRef}>
             <div className="hero-left">
-              <p className="hero-eyebrow">Research Report</p>
+              <p className="hero-eyebrow"></p>
 	      <h1 className="hero-headline">
             Venture capital funds<br />
             <span className="drawn-circle-wrapper">
@@ -544,7 +544,8 @@ export default function Home() {
           </h1>
               <span className="hero-rule" aria-hidden="true" />
               <p className="hero-lede">
-                Analyzing a 500k sample from 7.8 million USPTO patents, this study finds that
+                Does venture backing a positive force and drive innovation? By analyzing
+                a 500k sample from 7.8 million USPTO patents, we found that
                 venture-backed inventions are systematically more science-intensive,
                 broader in claim scope, and more influential across technology
                 domains than their non-VC counterparts.
