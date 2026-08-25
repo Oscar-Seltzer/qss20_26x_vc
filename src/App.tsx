@@ -7,7 +7,7 @@ import Paper from './pages/Paper'
 
 // ─── Protected Route Component ───────────────────────────────────────────────
 interface ProtectedRouteProps {
-  children: JSX.Element
+  children: React.ReactNode
   correctPass?: string
 }
 

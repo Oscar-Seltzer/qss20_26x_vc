@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
 interface ProtectedRouteProps {
-  children: JSX.Element
+  children: React.ReactNode
   correctPass?: string
 }
 
 export default function ProtectedRoute({
   children,
-  correctPass = 'vc' // Set your desired password here
+  correctPass = 'frontier2026'
 }: ProtectedRouteProps) {
   // Check session storage so users don't have to re-enter password on refresh
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
