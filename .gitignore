@@ -1,16 +1,24 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
 node_modules
 dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-
-
-#ignore since code in colab
-output/
-code/
-outputs/
-data/
-raw_data/
-scripts/
-*.csv
-*.tsv
-*.parquet
-*.pkl
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

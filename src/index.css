@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --ground: #FAF8F5;
+  --ink: #181615;
+  --accent: #228B22;
+  --mid: #8C877E;
+  --rule: #E8E3DC;
+  --surface-tint: #F2EEE9;
+}
+
+html, body, #root {
+  background-color: #FAF8F5 !important;
+  color: #181615 !important;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Force readable contrast on paragraphs and body copy */
+p, span, li, td, label {
+  color: #2C2825 !important;
+}
+
+/* Force subheadings and muted text to be legible instead of washed out */
+.text-\[\#8C877E\], .text-zinc-400, .text-gray-500, small, .subtitle {
+  color: #5C574F !important;
+}
+
+/* Force all instances of the light stat/rule color to match the primary ink color */
+[class*="text-[#E8E3DC]"], .text-\[\#E8E3DC\], .stat-number, .stat-value {
+  color: #181615 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #181615 !important;
+  font-family: 'Playfair Display', serif;
+}
