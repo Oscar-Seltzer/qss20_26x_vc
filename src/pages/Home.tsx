@@ -544,7 +544,7 @@ export default function Home() {
           </h1>
               <span className="hero-rule" aria-hidden="true" />
               <p className="hero-lede">
-                Does venture backing a positive force and drive innovation? By analyzing
+                Is venture backing a positive force that drives innovation? By analyzing
                 a 500k sample from 7.8 million USPTO patents, we found that
                 venture-backed inventions are systematically more science-intensive,
                 broader in claim scope, and more influential across technology
