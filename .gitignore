@@ -1,3 +1,16 @@
 node_modules
 dist
 .DS_Store
+
+
+#ignore since code in colab
+output/
+code/
+outputs/
+data/
+raw_data/
+scripts/
+*.csv
+*.tsv
+*.parquet
+*.pkl
