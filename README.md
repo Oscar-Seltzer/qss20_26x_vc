@@ -1,6 +1,6 @@
 # Venture Capital and Patenting Dynamics (2000–2020)
 
-An empirical analysis investigating how venture capital (VC) backing influences corporate patenting strategies, technological impact, legal scope, and science intensity across 500,000 USPTO patents granted between 2000 and 2020.
+An empirical analysis investigating how venture capital (VC) backing influences innovation, corporate patenting strategies, technological impact, legal scope, and science intensity across a sample of 500,000 USPTO patents granted between 2000 and 2020.
 
 ---
 
@@ -67,84 +67,75 @@ All source files are available in the main branch repository.
 
 ### 1. Data Pipeline & ETL
 
-<table>
-  <tr>
-    <th>Script / Asset</th>
-    <th style="width: 80%;">Description</th>
-    <th>Inputs</th>
-    <th>Outputs / Artifacts</th>
-  </tr>
-  <tr>
-    <td><code>01_extract_cohort_and_citations.ipynb</code></td>
-    <td>Streams USPTO bulk archives to local SSD via DuckDB, draws a 500k random cohort (2000–2020), and compiles forward/backward citation counts, NPL references, CPC subclasses, and disambiguated assignees.</td>
-    <td><code>patentvc_enhanced_4var.dta</code><br/><code>g_cpc_current.tsv.zip</code><br/><code>g_us_patent_citation.tsv.zip</code><br/><code>g_other_reference.tsv.zip</code><br/><code>g_assignee_disambiguated.tsv.zip</code></td>
-    <td><code>step1_metrics.parquet</code></td>
-  </tr>
-  <tr>
-    <td><code>02_process_claims_and_panel.ipynb</code></td>
-    <td>Converts claims Stata datasets to chunked Parquet via PyArrow, executes key-indexed DuckDB joins, generates peer benchmark citation baselines (CPC subclass × grant year), and creates the master analytical panel.</td>
-    <td><code>step1_metrics.parquet</code><br/><code>patent_claims_stats.dta.zip</code></td>
-    <td><code>step2_claims.parquet</code><br/><code>cleaned_patent_panel.parquet</code><br/><code>cleaned_patent_panel.csv</code></td>
-  </tr>
-</table>
+#### `01_extract_cohort_and_citations.ipynb`
+**Description:** Streams USPTO bulk archives to local SSD via DuckDB, draws a 500k random cohort (2000–2020), and compiles forward/backward citation counts, NPL references, CPC subclasses, and disambiguated assignees.
+
+**Inputs:** `patentvc_enhanced_4var.dta`, `g_cpc_current.tsv.zip`, `g_us_patent_citation.tsv.zip`, `g_other_reference.tsv.zip`, `g_assignee_disambiguated.tsv.zip`
+
+**Outputs:** `step1_metrics.parquet`
+
+---
+
+#### `02_process_claims_and_panel.ipynb`
+**Description:** Converts claims Stata datasets to chunked Parquet via PyArrow, executes key-indexed DuckDB joins, generates peer benchmark citation baselines (CPC subclass × grant year), and creates the master analytical panel.
+
+**Inputs:** `step1_metrics.parquet`, `patent_claims_stats.dta.zip`
+
+**Outputs:** `step2_claims.parquet`, `cleaned_patent_panel.parquet`, `cleaned_patent_panel.csv`
 
 ### 2. Statistical Analysis & Metrics
 
-<table>
-  <tr>
-    <th>Script / Asset</th>
-    <th style="width: 80%;">Description</th>
-    <th>Inputs</th>
-    <th>Outputs / Artifacts</th>
-  </tr>
-  <tr>
-    <td><code>03_descriptive_statistics.ipynb</code></td>
-    <td>Computes parametric and non-parametric summary distributions (mean, std dev, quantiles) and runs two-sample t-tests between VC-backed and non-VC patents across citations, claims, and NPL ratios.</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td>Standard Output Tables & T-Test Metrics</td>
-  </tr>
-</table>
+#### `03_descriptive_statistics.ipynb`
+**Description:** Computes parametric and non-parametric summary distributions (mean, std dev, quantiles) and runs two-sample t-tests between VC-backed and non-VC patents across citations, claims, and NPL ratios.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** Standard Output Tables & T-Test Metrics
 
 ### 3. Visualization & Figures
 
-<table>
-  <tr>
-    <th>Script / Asset</th>
-    <th style="width: 80%;">Description</th>
-    <th>Inputs</th>
-    <th>Outputs / Artifacts</th>
-  </tr>
-  <tr>
-    <td><code>04_fig1_cpc_section_citations.ipynb</code></td>
-    <td>Computes point estimates and standard errors for normalized citation impact across major CPC technology sections (A, B, C, F, G, H) relative to the 1.0 sector peer benchmark.</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td><code>output/figure1_cpc_section_citations.png</code><br/><code>output/figure1_vert_cpc_section_citations.png</code></td>
-  </tr>
-  <tr>
-    <td><code>05_fig2_science_and_scope_kde.ipynb</code></td>
-    <td>Estimates kernel density distributions comparing science intensity (<code>npl_ratio</code>) and patent scope (<code>log_claims</code>) between VC-backed and non-VC cohorts.</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td><code>output/figure2a_science_intensity.png</code><br/><code>output/figure2b_patent_scope.png</code></td>
-  </tr>
-  <tr>
-    <td><code>06_fig3_claims_policy_trend.ipynb</code></td>
-    <td>Plots longitudinal trends in mean total claim counts from 2008 to 2014, evaluating behavioral changes surrounding the 2011 Leahy-Smith America Invents Act (AIA).</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td><code>output/figure3_claims_policy_trend.png</code></td>
-  </tr>
-  <tr>
-    <td><code>07_fig4_claims_distribution.ipynb</code></td>
-    <td>Generates cross-sectional boxplots of total claims across CPC sections grouped by VC backing status (outliers suppressed for visual clarity).</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td><code>output/figure4_claims_distribution.png</code></td>
-  </tr>
-  <tr>
-    <td><code>08_fig5_grant_lag_distribution.ipynb</code></td>
-    <td>Computes and plots prosecution pendency (years between application filing and patent grant) distributions and median markers for VC and non-VC entities.</td>
-    <td><code>cleaned_patent_panel.parquet</code></td>
-    <td><code>output/figure5_grant_lag_distribution.png</code></td>
-  </tr>
-</table>
+#### `04_fig1_cpc_section_citations.ipynb`
+**Description:** Computes point estimates and standard errors for normalized citation impact across major CPC technology sections (A, B, C, F, G, H) relative to the 1.0 sector peer benchmark.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure1_cpc_section_citations.png`, `output/figure1_vert_cpc_section_citations.png`
+
+---
+
+#### `05_fig2_science_and_scope_kde.ipynb`
+**Description:** Estimates kernel density distributions comparing science intensity (`npl_ratio`) and patent scope (`log_claims`) between VC-backed and non-VC cohorts.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure2a_science_intensity.png`, `output/figure2b_patent_scope.png`
+
+---
+
+#### `06_fig3_claims_policy_trend.ipynb`
+**Description:** Plots longitudinal trends in mean total claim counts from 2008 to 2014, evaluating behavioral changes surrounding the 2011 Leahy-Smith America Invents Act (AIA).
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure3_claims_policy_trend.png`
+
+---
+
+#### `07_fig4_claims_distribution.ipynb`
+**Description:** Generates cross-sectional boxplots of total claims across CPC sections grouped by VC backing status (outliers suppressed for visual clarity).
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure4_claims_distribution.png`
+
+---
+
+#### `08_fig5_grant_lag_distribution.ipynb`
+**Description:** Computes and plots prosecution pendency (years between application filing and patent grant) distributions and median markers for VC and non-VC entities.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure5_grant_lag_distribution.png`
 
 ---
 
