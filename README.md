@@ -1,107 +1,236 @@
-# qss20_26x_vc
-
 # Venture Capital and Patenting Dynamics (2000–2020)
 
-This project is an ongoing empirical analysis investigating how venture capital (VC) backing influences corporate patenting strategies, technological impact, legal scope, and science intensity across 500,000 USPTO patents granted between 2000 and 2020 with the final goal of seeing how to maximize innovation through venture funding.
+An empirical analysis investigating how venture capital (VC) backing influences innovation, corporate patenting strategies, technological impact, legal scope, and science intensity across a sample of 500,000 USPTO patents granted between 2000 and 2020.
+
+---
+
+## Table of Contents
+
+- [Project Overview & Research Objectives](#project-overview--research-objectives)
+- [Repository Structure](#repository-structure)
+- [Directory & File Reference](#directory--file-reference)
+  - [1. Data Pipeline & ETL](#1-data-pipeline--etl)
+  - [2. Statistical Analysis & Metrics](#2-statistical-analysis--metrics)
+  - [3. Visualization & Figures](#3-visualization--figures)
+- [Key Empirical Findings](#key-empirical-findings)
+- [Dataset & Variable Dictionary](#dataset--variable-dictionary)
+- [Data Sources & Setup](#data-sources--setup)
+- [Pipeline Architecture](#pipeline-architecture)
+- [Use of Artificial Intelligence](#use-of-artificial-intelligence)
 
 ---
 
 ## Project Overview & Research Objectives
 
-VC are known to pursue asymmetric outcomes with a $300 M fund generally investing in 30 companies. The common saying is that out of those 30: 10 will go to 0, 10 will break even, 5 will 2-5x, 4 will 10x, and 1 will 50+x. This project evaluates whether VC-backed inventions differ systematically from traditional non-VC corporate and individual patents across several core dimensions:
+Venture capital firms pursue asymmetric outcomes: within a standard portfolio of 30 startups, conventional wisdom holds that 10 fail entirely, 10 break even, 5 return 2x–5x, 4 return 10x, and 1 achieves a 50x+ outcome. This project investigates whether VC-backed patents systematically differ from non-VC corporate and individual patents across four structural dimensions:
 
-- Technological Impact: Forward citations normalized against peer benchmarks (CPC subclass × grant year cohort mean).
-- Patent Scope & Breadth: Legal complexity and breadth measured by total independent and dependent claim counts.
-- Science Intensity: Proximity to foundational scientific research proxied by the Non-Patent Literature (NPL) citation ratio.
-- Institutional & Sector Responses: Differences in drafting behavior around major legal shifts (such as the 2011 Leahy-Smith America Invents Act) and across distinct Cooperative Patent Classification (CPC) technology sections.
-
-This is all with the goal of seeing if: (1) if certain methodologies of investing would procure better results than others and (2) are there policies to put in place to maximize innovation and American Dynamism.
-
+1. **Technological Impact:** Forward citations normalized against peer benchmarks (CPC subclass × grant year cohort mean).
+2. **Patent Scope & Breadth:** Legal complexity and breadth measured by independent and total claim counts.
+3. **Science Intensity:** Proximity to foundational scientific research proxied by the Non-Patent Literature (NPL) citation ratio.
+4. **Institutional & Policy Responses:** Drafting behavior surrounding statutory shifts (such as the 2011 Leahy-Smith America Invents Act) and across distinct Cooperative Patent Classification (CPC) sections.
 
 ---
 
-## Key Findings & Empirical Summary
+## Repository Structure
 
-Based on Welch's two-sample t-tests across the 500,000-patent random cohort:
-
-- Citation Impact: VC-backed patents achieve more than double the normalized forward citation impact of non-VC patents (2.026 vs. 0.981, p = 0.014).
-- Patent Scope: VC-backed patents contain significantly higher claim counts (22.23 vs. 16.03 claims, p < 10^-180), likely due to broader defense strategies. 
-- Science Intensity: VC-backed inventions demonstrate a higher reliance on academic and scientific literature (44.6% vs. 36.9% NPL ratio, p = 0.0047).
-- Breakthrough Propensity: VC-backed patents maintain a disproportionately higher share in the top 5th percentile of peer-normalized citations throughout the 2000–2020 window.
+```
+├── README.md
+├── .gitignore
+├── code/
+│   ├── 01_extract_cohort_and_citations.ipynb
+│   ├── 02_process_claims_and_panel.ipynb
+│   ├── 03_descriptive_statistics.ipynb
+│   ├── 04_fig1_cpc_section_citations.ipynb
+│   ├── 05_fig2_science_and_scope_kde.ipynb
+│   ├── 06_fig3_claims_policy_trend.ipynb
+│   ├── 07_fig4_claims_distribution.ipynb
+│   └── 08_fig5_grant_lag_distribution.ipynb
+├── data/
+│   └── (Intermediate Parquet/CSV files & raw archives hosted via Drive)
+├── output/
+│   ├── figure1_cpc_section_citations.png
+│   ├── figure1_vert_cpc_section_citations.png
+│   ├── figure2a_science_intensity.png
+│   ├── figure2b_patent_scope.png
+│   ├── figure3_claims_policy_trend.png
+│   ├── figure4_claims_distribution.png
+│   └── figure5_grant_lag_distribution.png
+└── website/
+    └── files to run a website showcasing the project hosted on Vercel
+```
 
 ---
 
-## Dataset & Variable Definitions
+## Directory & File Reference
 
-The final analytical panel (cleaned_patent_panel.parquet / cleaned_patent_panel.csv) contains patent-level observations with the following variables:
+All source files are available in the main branch repository.
+
+### 1. Data Pipeline & ETL
+
+#### `01_extract_cohort_and_citations.ipynb`
+**Description:** Streams USPTO bulk archives to local SSD via DuckDB, draws a 500k random cohort (2000–2020), and compiles forward/backward citation counts, NPL references, CPC subclasses, and disambiguated assignees.
+
+**Inputs:** `patentvc_enhanced_4var.dta`, `g_cpc_current.tsv.zip`, `g_us_patent_citation.tsv.zip`, `g_other_reference.tsv.zip`, `g_assignee_disambiguated.tsv.zip`
+
+**Outputs:** `step1_metrics.parquet`
+
+---
+
+#### `02_process_claims_and_panel.ipynb`
+**Description:** Converts claims Stata datasets to chunked Parquet via PyArrow, executes key-indexed DuckDB joins, generates peer benchmark citation baselines (CPC subclass × grant year), and creates the master analytical panel.
+
+**Inputs:** `step1_metrics.parquet`, `patent_claims_stats.dta.zip`
+
+**Outputs:** `step2_claims.parquet`, `cleaned_patent_panel.parquet`, `cleaned_patent_panel.csv`
+
+### 2. Statistical Analysis & Metrics
+
+#### `03_descriptive_statistics.ipynb`
+**Description:** Computes parametric and non-parametric summary distributions (mean, std dev, quantiles) and runs two-sample t-tests between VC-backed and non-VC patents across citations, claims, and NPL ratios.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** Standard Output Tables & T-Test Metrics
+
+### 3. Visualization & Figures
+
+#### `04_fig1_cpc_section_citations.ipynb`
+**Description:** Computes point estimates and standard errors for normalized citation impact across major CPC technology sections (A, B, C, F, G, H) relative to the 1.0 sector peer benchmark.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure1_cpc_section_citations.png`, `output/figure1_vert_cpc_section_citations.png`
+
+---
+
+#### `05_fig2_science_and_scope_kde.ipynb`
+**Description:** Estimates kernel density distributions comparing science intensity (`npl_ratio`) and patent scope (`log_claims`) between VC-backed and non-VC cohorts.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure2a_science_intensity.png`, `output/figure2b_patent_scope.png`
+
+---
+
+#### `06_fig3_claims_policy_trend.ipynb`
+**Description:** Plots longitudinal trends in mean total claim counts from 2008 to 2014, evaluating behavioral changes surrounding the 2011 Leahy-Smith America Invents Act (AIA).
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure3_claims_policy_trend.png`
+
+---
+
+#### `07_fig4_claims_distribution.ipynb`
+**Description:** Generates cross-sectional boxplots of total claims across CPC sections grouped by VC backing status (outliers suppressed for visual clarity).
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure4_claims_distribution.png`
+
+---
+
+#### `08_fig5_grant_lag_distribution.ipynb`
+**Description:** Computes and plots prosecution pendency (years between application filing and patent grant) distributions and median markers for VC and non-VC entities.
+
+**Inputs:** `cleaned_patent_panel.parquet`
+
+**Outputs:** `output/figure5_grant_lag_distribution.png`
+
+---
+
+## Key Empirical Findings
+
+| Metric Dimension | VC-Backed Mean | Non-VC Mean | Statistical Significance | Substantive Interpretation |
+| --- | --- | --- | --- | --- |
+| **Normalized Citation Impact** | 2.026 | 0.981 | p = 0.014 | VC inventions receive more than double the peer-normalized citations of general corporate inventions. |
+| **Patent Scope (Total Claims)** | 22.23 claims | 16.03 claims | p < 10⁻¹⁸⁰ | VC-backed patents carry significantly broader and more extensive legal claims. |
+| **Science Intensity (NPL Ratio)** | 44.6% | 36.9% | p = 0.0047 | VC inventions draw substantially more foundational inputs from published academic and scientific literature. |
+| **Prosecution Pendency** | 2.91 years | 3.12 years | p < 0.001 | VC assignees reach grant status faster despite filing broader claim sets. |
+
+---
+
+## Dataset & Variable Dictionary
+
+The compiled analytical panel (`cleaned_patent_panel.parquet` / `cleaned_patent_panel.csv`) includes the following variables:
 
 | Variable | Type | Description |
-| :--- | :--- | :--- |
-| patent_id | String | Unique USPTO patent grant identifier. |
-| vc_backed | Integer | Binary indicator (1 = Assignee received venture capital funding; 0 = Non-VC). |
-| grant_year | Integer | Calendar year in which the patent was officially granted (2000–2020). |
-| app_year | Integer | Calendar year of original patent application filing. |
-| cpc_section | String | Broad CPC technology section (A, B, C, F, G, H). |
-| cpc_subclass | String | 4-character CPC subclass representing detailed peer technology area. |
-| raw_forward_citations | Integer | Total citations received from subsequent US patents. |
-| normalized_forward_citations | Float | Ratio of focal forward citations to the peer benchmark (CPC subclass × grant year mean). |
-| backward_pat_citations | Integer | Total citations to prior US patent documents. |
-| npl_citations | Integer | Count of unique citations to Non-Patent Literature (academic journals, papers). |
-| npl_ratio | Float | Science intensity ratio: NPL / (Backward Patent Cites + NPL). |
-| total_claims | Integer | Total count of claims within the patent document. |
-| log_claims | Float | Natural log transformation: ln(total_claims + 1) to correct right skew. |
-| assignee_organization | String | Standardized disambiguated assignee / owner organization. |
+| --- | --- | --- |
+| `patent_id` | String | Unique USPTO patent grant identifier. |
+| `vc_backed` | Integer | Binary indicator (1 = Assignee received venture funding; 0 = Non-VC). |
+| `grant_date` | Date | Official date on which the patent was issued by the USPTO. |
+| `application_date` | Date | Official filing date of the original patent application. |
+| `grant_year` | Integer | Calendar year of patent issuance (2000–2020). |
+| `app_year` | Integer | Calendar year of application filing. |
+| `cpc_section` | String | Primary CPC technology section (A, B, C, F, G, H). |
+| `cpc_subclass` | String | Detailed 4-character CPC subclass representing the peer technology area. |
+| `raw_forward_citations` | Integer | Raw count of forward citations received from subsequent US patents. |
+| `peer_benchmark_mean_cites` | Float | Mean forward citations received by patents in the same CPC subclass × grant year. |
+| `normalized_forward_citations` | Float | Focal forward citations divided by `peer_benchmark_mean_cites`. |
+| `backward_pat_citations` | Integer | Count of citations to prior US patent documents. |
+| `npl_citations` | Integer | Count of unique citations to Non-Patent Literature (academic journals, papers). |
+| `npl_ratio` | Float | Science intensity ratio: NPL / (Backward Patent Cites + NPL). |
+| `total_claims` | Integer | Total count of claims contained in the patent document. |
+| `log_claims` | Float | Natural log transformation: ln(total_claims + 1) to correct for positive skew. |
+| `avg_words_per_claim` | Float | Average word count across all claims in the document. |
+| `total_claim_words` | Integer | Aggregate word count across all claims. |
+| `has_independent_claims` | Integer | Binary flag (1 = Document contains explicit independent claims; 0 = Otherwise). |
+| `assignee_organization` | String | Standardized disambiguated owner / assignee organization name. |
+| `assignee_type` | String | USPTO assignee classification code. |
 
 ---
 
-## Data Sources & Download Instructions
+## Data Sources & Setup
 
-The data pipeline synthesizes data from two primary sources:
+### 1. PatentsView Bulk Data Tables
 
-### USPTO Bulk Data (PatentsView)
-Available for direct download at PatentsView Data Download Tables:
-- g_cpc_current.tsv.zip — Current Cooperative Patent Classification assignments.
-- g_us_patent_citation.tsv.zip — Patent-to-patent citation linkages (130M+ rows).
-- g_other_reference.tsv.zip — Non-patent literature citations.
-- g_assignee_disambiguated.tsv.zip — Disambiguated patent assignees and organization names.
+Download the raw `.tsv.zip` archives directly from [PatentsView Data Download Tables](https://patentsview.org/download/data-download-tables):
 
-### Venture Capital & Claims Data
-- PatentVC Linked Panel (patentvc_enhanced_4var.dta): Curated match between VentureSource/PitchBook VC funding events and USPTO patent numbers.
-- USPTO Patent Claims Stats (patent_claims_stats.dta.zip): Historical per-claim breakdown, independent claim flags, and word counts.
+* `g_cpc_current.tsv.zip` — Current CPC classifications.
+* `g_us_patent_citation.tsv.zip` — Patent-to-patent citation linkages (130M+ rows).
+* `g_other_reference.tsv.zip` — Non-patent literature citations.
+* `g_assignee_disambiguated.tsv.zip` — Disambiguated patent assignees.
 
-https://drive.google.com/drive/folders/1jyvfp9pOSz27jY5ny5fRUYi7ELK8gra7?usp=sharing
+### 2. Venture Capital & Claims Data
+
+* **PatentVC Linked Panel (`patentvc_enhanced_4var.dta`):** Curated match between VentureSource/PitchBook venture financing rounds and USPTO patent numbers.
+* **USPTO Patent Claims Stats (`patent_claims_stats.dta.zip`):** Longitudinal per-claim breakdown, independent claim flags, and word counts.
+* **Direct Access:** Download both files from the project's Google Drive Data Repository.
 
 ---
 
 ## Pipeline Architecture
 
-Due to large file sizes and limited computing power, the ETL and analysis workflow is designed for zero out-of-memory (OOM) failures using DuckDB's streaming OLAP engine and PyArrow chunked conversions:
+The ETL workflow runs on local SSD scratch space using DuckDB's vectorized columnar engine and a PyArrow chunked iteration to prevent zip-bombing yourself:
 
-```text
-[Raw Zip / DTA Files] 
-      │
-      ▼ (DuckDB Streaming + Uncompressed Local SSD)
-[Step 1: Cohort Extraction & Citation Networks] ───► step1_metrics.parquet
-      │
-      ▼ (PyArrow 5M-Row Chunked Stata Stream)
-[Step 2: Claims Matching & Parsing]             ───► step2_claims.parquet
-      │
-      ▼ (Peer Benchmarking & Aggregation)
-[Step 3: Master Normalization & Export]         ───► cleaned_patent_panel.parquet / .csv
-      │
-      ├──► Descriptive Statistics & Welch's T-Tests
-      ├──► Figure 1: CPC Technology Section Citation Impact
-      ├──► Figure 2: AIA 2011 Reform Claims Policy Trends (2006–2016)
-      └──► Figure 3: Top 5% Breakthrough Share Trajectory (2000–2020)
 ```
+[Raw TSV.ZIP & DTA Files]
+           │
+           ▼ (DuckDB Streaming Uncompress & Reservoir Sample)
+[Step 1: Cohort Extraction & Citation Networks] ──────────► step1_metrics.parquet
+           │
+           ▼ (PyArrow 5M-Row Chunked Stream + Key Clean)
+[Step 2: Claims Matching & Parsing]             ──────────► step2_claims.parquet
+           │
+           ▼ (Subclass x Grant Year Benchmarking)
+[Step 3: Master Normalization & Export]         ──────────► cleaned_patent_panel.parquet / .csv
+           │
+           ├──► 03_descriptive_statistics.ipynb    (Summary stats & t-tests)
+           ├──► 04_fig1_cpc_section_citations.ipynb (Section-level normalized impact)
+           ├──► 05_fig2_science_and_scope_kde.ipynb (Empirical KDE density curves)
+           ├──► 06_fig3_claims_policy_trend.ipynb   (AIA 2011 longitudinal policy trend)
+           ├──► 07_fig4_claims_distribution.ipynb   (Section claim boxplots)
+           └──► 08_fig5_grant_lag_distribution.ipynb (Prosecution lag distributions)
+```
+
 ---
 
 ## Use of Artificial Intelligence
 
-Large language models (LLMs) were utilized throughout the lifecycle of this project. Specifically, AI tools assisted with:
+Large language models (LLMs such as Claude and Gemini) were utilized throughout the development lifecycle of this project:
 
-- Data pipeline optimization (refactoring memory-efficient DuckDB queries and chunked PyArrow conversions)
-- Formatting and debugging visualizing code
-- Refining formatting and word-choice utilized in documentation and figure descriptions
+* **Pipeline Architecture & Optimization:** Assisting with zero-OOM DuckDB queries and chunked PyArrow parsing routines.
+* **Visualization Engineering:** Refactoring matplotlib/seaborn figure scripts to meet rubric requirements.
+* **Documentation:** Refining Markdown syntax and formatting.
 
-All underlying empirical methodology, data processing logic, analytical results, and interpretations were reviewed, verified, and finalized by the author.
+All empirical hypotheses, econometric specifications, data validation steps, and analytical conclusions were designed, verified, and finalized by the author.
