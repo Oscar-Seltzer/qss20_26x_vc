@@ -10,48 +10,48 @@ const GITHUB_URL = 'https://github.com/Oscar-Seltzer/qss20_26x_vc'
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const abstract = {
-  title: 'Venture Capital and the Science Frontier: Evidence from 50 Years of USPTO Patent Data',
-  authors: 'QSS 20 Research Group · Dartmouth College · 2026',
+  title: 'Venture Capital Backing and Its Relationship to Innovation Quality, Scope, and Science Intensity',
+  authors: 'Oscar Seltzer · Quantitative Social Science Program, Dartmouth College · 2026',
   body: [
-    'We examine whether venture-capital financing is associated with systematically more science-intensive, broader-scope, and more cross-disciplinary patents. Using a panel of 7,842,115 USPTO utility patents granted between 1976 and 2024, matched to venture financing records from PitchBook, Crunchbase, and SEC Form D filings, we find that VC-backed patents carry a 2.4× premium on non-patent literature citation share (a proxy for scientific proximity), 31% more independent claims on average, and generate cross-CPC-class forward citations at 3.1× the rate of the non-VC cohort.',
-    'These effects are identified using two-way fixed effects at the NBER technology-category and grant-year level, controlling for patent-level observables including backward citation count, CPC section, and assignee type. The premium is sharpest among Seed and Series A patents and attenuates by Series C, consistent with a selection story in which early-stage VCs bet on frontier science while later-stage capital scales established businesses. Robustness checks address citation truncation bias, examiner heterogeneity, and selection on unobservables via coarsened exact matching and within-company difference-in-differences.',
-    'The findings suggest that venture capital plays a distinct role in the innovation system — not merely as a financier of commercialisation, but as an active participant in the translation of basic science into patentable, cross-domain technology.',
+    'Venture capital (VC) is credited with accelerating high-risk, high-reward technological breakthroughs, yet empirical evidence tracing how private backing shapes these innovations via the impact, legal, and scientific substance of intellectual property remains incomplete. From 7.8 million patents, we constructed a set of 500,000 U.S. patents granted between 2000 and 2020, matched to venture-financing events and disambiguated USPTO assignee, citation, and claim-level records.',
+    'We evaluated patents across three dimensions: peer-normalized forward citation rate, claim-based legal defensibility, and non-patent-literature (NPL) science intensity. T-tests indicate that VC-backed patents receive more than double the peer-normalized forward citations of non-VC patents (2.03 vs. 0.98), carry broader claim sets (22.2 vs. 16.0 claims), and cite academic literature at a higher rate (44.6% vs. 36.9% NPL ratio). However, the VC benefit is not uniform, generating high citation multiples in frontier fields such as DeepTech, while other less-frontier sectors exhibit no citation advantage over incumbent peers.',
+    "Further, while VC-backed companies have consistently had more claims than non-VC peers, following policy reform with the 2011 America Invents Act, this difference doubled in only three years, demonstrating increased adaptability to procedural reforms. These findings demonstrate that VC's impact is sector-specific, which can provide empirical guidance for federal innovation policy, patent system reform, and institutional capital allocation.",
   ],
-  keywords: ['Venture Capital', 'Patent Quality', 'Science Intensity', 'NPL Citations', 'CPC Classification', 'Two-Way Fixed Effects'],
-  jel: ['G24', 'O31', 'O34', 'L26'],
+  keywords: ['Venture Capital', 'Deep Tech', 'Patent Citations', 'Patent Scope', 'Innovation Policy'],
 }
 
 const dataDictionary = [
   {
     group: 'Core Panel',
     fields: [
-      { col: 'patent_id', type: 'VARCHAR', desc: 'USPTO patent number (zero-padded to 8 chars)' },
-      { col: 'application_date', type: 'DATE', desc: 'Date application was filed with USPTO' },
-      { col: 'grant_date', type: 'DATE', desc: 'Date patent was officially granted' },
-      { col: 'vc_backed', type: 'INT(0/1)', desc: 'Binary flag: 1 if assignee received VC financing before application_date' },
+      { col: 'grant_year', type: 'DATE', desc: 'Year the patent was officially granted' },
+      { col: 'application_year', type: 'DATE', desc: 'Year application was filed with USPTO' },
+      { col: 'vc_backed', type: 'INT(0/1)', desc: 'Binary indicator for venture capital backing' },
+      { col: 'assignee_identifiers', type: 'VARCHAR', desc: 'Disambiguated assignee identifiers' },
     ],
   },
   {
     group: 'Citation Metrics',
     fields: [
-      { col: 'backward_pat_citations', type: 'INT', desc: 'Count of distinct prior-patent citations in the patent document' },
-      { col: 'npl_citations', type: 'INT', desc: 'Count of distinct non-patent literature references (journals, reports, preprints)' },
-      { col: 'npl_ratio', type: 'FLOAT', desc: 'npl_citations ÷ (backward_pat_citations + npl_citations); null if both zero' },
+      { col: 'raw_forward_citations', type: 'INT', desc: 'Raw forward citation counts' },
+      { col: 'normalized_forward_citations', type: 'FLOAT', desc: 'Peer-normalized forward citation counts benchmarked against CPC subclass × grant-year peer means' },
+      { col: 'backward_pat_citations', type: 'INT', desc: 'Backward patent citations' },
+      { col: 'npl_citations', type: 'INT', desc: 'NPL citations' },
+      { col: 'npl_ratio', type: 'FLOAT', desc: 'Science intensity metric bounded [0, 1]' },
     ],
   },
   {
     group: 'Classification',
     fields: [
-      { col: 'main_cpc_section', type: 'CHAR(1)', desc: 'Primary CPC section letter (A–H, Y) from g_cpc_current' },
-      { col: 'main_cpc_subclass', type: 'VARCHAR(4)', desc: 'Primary CPC subclass (e.g. H04L) — first assigned code by sequence' },
-      { col: 'cpc_subclass_count', type: 'INT', desc: 'Total distinct CPC subclasses assigned to the patent' },
+      { col: 'primary_cpc_section', type: 'CHAR(1)', desc: 'Primary CPC technology section (A-H)' },
+      { col: 'cpc_subclass', type: 'VARCHAR(4)', desc: '4-character CPC subclass' },
     ],
   },
   {
-    group: 'Assignee',
+    group: 'Legal Scope',
     fields: [
-      { col: 'assignee_organization', type: 'VARCHAR', desc: 'Disambiguated organisation name from PatentsView (g_assignee_disambiguated)' },
-      { col: 'assignee_type', type: 'VARCHAR', desc: 'Assignee category: US company, foreign company, US individual, government, etc.' },
+      { col: 'total_claims', type: 'INT', desc: 'Total claim counts' },
+      { col: 'log_claims', type: 'FLOAT', desc: 'Logarithmic transformation of total claim counts' },
     ],
   },
 ]
@@ -64,20 +64,21 @@ const replicationSteps = [
   },
   {
     step: '2',
-    head: 'Acquire the data',
-    body: 'Download the USPTO PatentsView bulk TSV files (g_us_patent_citation, g_other_reference, g_cpc_current, g_assignee_disambiguated, patent_claims_stats) and place them in data/uspto/. The VC financing dataset (patentvc_enhanced_4var.dta) should be placed in data/. See README for direct download links.',
+    head: 'Acquire the empirical data sources',
+    body: 'Download PatentsView Bulk Releases (g_cpc_current, g_us_patent_citation, g_other_reference, g_assignee_disambiguated), the Patent VC Enhanced Linkage panel, and USPTO Patent Claims Statistics.',
     code: null,
   },
   {
     step: '3',
-    head: 'Build the master panel',
-    code: 'cd code/\njupyter nbconvert --to notebook --execute working_data_analysis.ipynb',
+    head: 'Execute vectorized ETL pipeline',
+    body: "Processing proceeds in three streaming stages using DuckDB's vectorized OLAP engine over uncompressed local SSD storage and PyArrow chunked conversions for Stata (.dta) files.",
+    code: null,
   },
   {
     step: '4',
-    head: 'Run the regression models',
-    body: 'Open analysis/regressions.py and set BASE_DIR to your local data/ path. The script produces all tables reported in the paper, saved as CSV to output/tables/.',
-    code: 'python analysis/regressions.py',
+    head: 'Run statistical testing',
+    body: "Execute Welch's two-sample t-tests comparing group means for normalized forward citations, total claims, and NPL ratios, correcting for sample size imbalances between cohorts.",
+    code: null,
   },
 ]
 
@@ -208,7 +209,7 @@ export default function Paper() {
           color: var(--mid);
           max-width: 68ch;
         }
-        /* Keyword + JEL row */
+        /* Keyword row */
         .abstract-meta-row {
           display: flex;
           flex-wrap: wrap;
@@ -240,15 +241,6 @@ export default function Paper() {
           background: var(--surface);
           letter-spacing: 0.02em;
         }
-        .meta-pill-jel {
-          font-family: 'Georgia', serif;
-          font-style: italic;
-          font-size: 0.7rem;
-          color: var(--accent);
-          border: 1px solid var(--rule);
-          padding: 0.2rem 0.55rem;
-          background: var(--surface);
-        }
 
         /* Artifact cards column (right) */
         .artifact-col {
@@ -256,7 +248,6 @@ export default function Paper() {
           flex-direction: column;
           gap: 0;
           border: 1px solid var(--rule);
-          /* Cards stack inside a single ruled border */
         }
 
         /* PDF card */
@@ -309,7 +300,6 @@ export default function Paper() {
           position: relative;
           flex-shrink: 0;
         }
-        /* Folded corner via a pseudo-element */
         .doc-icon::before {
           content: '';
           position: absolute;
@@ -321,7 +311,6 @@ export default function Paper() {
           border-left: 1px solid var(--rule);
           border-bottom: 1px solid var(--rule);
         }
-        /* Three ruled lines suggesting text */
         .doc-icon::after {
           content: '';
           position: absolute;
@@ -665,7 +654,6 @@ export default function Paper() {
 
             {/* Abstract */}
             <div className="abstract-col">
-              <p className="abstract-eyebrow">Working paper</p>
               <h1 className="abstract-title">{abstract.title}</h1>
               <p className="abstract-authors">{abstract.authors}</p>
 
@@ -684,14 +672,6 @@ export default function Paper() {
                     ))}
                   </div>
                 </div>
-                <div className="abstract-meta-group">
-                  <div className="abstract-meta-label">JEL Codes</div>
-                  <div className="abstract-meta-pills">
-                    {abstract.jel.map((j) => (
-                      <span className="meta-pill-jel" key={j}>{j}</span>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -707,13 +687,15 @@ export default function Paper() {
                 </p>
                 <div className="pdf-placeholder" aria-hidden="true">
                   <div className="doc-icon" />
-                  <p className="pdf-placeholder-text">PDF available on request<br />or upon publication</p>
-                </div>
+                  <p className="pdf-placeholder-text">QSS20 VC Innovation Paper<br />(August 2026)</p>
+                  </div>
                 <a
-                  href="#"
+                  href="/Seltzer__Venture_Capital_Backing_and_Its_Relationship_to_Innovation_Quality__Scope__and_Science_Intensity.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
                   className="cta-link"
-                  aria-label="Download research report PDF (not yet available)"
-                  onClick={(e) => e.preventDefault()}
+                  aria-label="Download research report PDF"
                 >
                   Download PDF
                 </a>
@@ -756,8 +738,7 @@ export default function Paper() {
             <p className="section-intro">
               The full pipeline — from raw USPTO bulk files and VC financing records
               to the regression tables reported in the paper — can be reproduced
-              in four steps. Estimated runtime on a modern laptop: 45–90 minutes,
-              dominated by the DuckDB citation join.
+              in four steps.
             </p>
 
             <div className="replication-steps">

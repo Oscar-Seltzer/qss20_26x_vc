@@ -1,0 +1,40 @@
+# dataset summary and variable definitions
+
+# total observations: 500,000 patents
+# time period: 2000 - 2020 grant years
+# source: uspto database matched with venture capital records
+
+# variables
+# patent_id: unique patent identifier
+# vc_backed: 1 if assignee received venture capital, 0 otherwise
+# grant_year: calendar year patent was granted
+# normalized_forward_citations: focal citations divided by mean of cpc subclass and grant year cohort
+# npl_ratio: non-patent literature / (backward citations + non-patent literature)
+# total_claims: count of patent claims
+# log_claims: ln(total_claims + 1)
+
+# summary statistics
+# variable                      count    mean  std dev   min   25%   50%   75%     max
+# normalized_forward_citations  8012.00  1.00     2.56  0.00  0.00  0.23  1.09  111.47
+# npl_ratio                     7871.00  0.37     0.35  0.00  0.00  0.29  0.67    1.00
+# total_claims                 500000.00 16.15    14.08  0.00  7.00 14.00 21.00  683.00
+
+# group mean comparisons (welch's t-test)
+
+# normalized_forward_citations
+# vc-backed mean: 2.026 (n = 148)
+# non-vc mean:    0.981 (n = 7864)
+# t-statistic:    2.49
+# p-value:        0.0140
+
+# total_claims
+# vc-backed mean: 22.230 (n = 9536)
+# non-vc mean:    16.032 (n = 490464)
+# t-statistic:    29.71
+# p-value:        1.10e-185
+
+# npl_ratio
+# vc-backed mean: 0.446 (n = 146)
+# non-vc mean:    0.369 (n = 7725)
+# t-statistic:    2.87
+# p-value:        0.0047

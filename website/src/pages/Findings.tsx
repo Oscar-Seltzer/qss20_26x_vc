@@ -14,29 +14,33 @@ const sections = [
   {
     id: 'cpc-citations',
     chapter: 'A',
-    label: 'CPC Section Citations',
-    subtitle: 'Inter-disciplinary citation flows',
-    anchor: '3.1×',
-    anchorCaption: 'more cross-class forward citations',
+    label: 'Sector-Specific Citation Impact',
+    subtitle: 'Peer-normalized forward citations across CPC sections',
+    anchor: '2.03×',
+    anchorCaption: 'peer-normalized forward citations',
     thesis:
-      'VC-backed patents radiate influence across technology boundaries at a rate the broader patent corpus cannot match.',
+      'VC-backed patents generate high citation multiples in frontier fields like DeepTech, but offer no measurable advantage in mature engineering sectors.',
     stats: [
-      { value: '3.1×', label: 'Cross-class CPC forward citations', note: 'vs. non-VC cohort, 10-year window' },
-      { value: '47%', label: 'Patents with ≥2 CPC sections cited', note: 'VC-backed vs. 19% baseline' },
-      { value: 'H, G, C', label: 'Top CPC sections by cross-citation', note: 'Electricity · Physics · Chemistry' },
+      { value: '2.03', label: 'Normalized citations (VC)', note: 'vs. 0.98 baseline (p=0.014)' },
+      { value: '2.68×', label: 'Electricity (Section H)', note: 'Highest sector premium' },
+      { value: '0.76×', label: 'Mechanical Eng. (Section F)', note: 'Underperforms baseline' },
     ],
+    figure: {
+      src: '/figure1.png',
+      alt: 'Figure 1: Mean Normalized Forward Citation Impact Across CPC Technology Sections',
+    },
     findings: [
       {
-        head: 'Cross-section flows concentrate in platform technologies',
-        body: 'The Cooperative Patent Classification system organises inventions into nine top-level sections. When a patent in section G (Physics) is later cited by a patent in section H (Electricity), that cross-section flow signals generative, boundary-crossing innovation. VC-backed patents generate these flows at 3.1× the rate of non-VC patents in the same grant cohort, suggesting the portfolio consistently targets technologies that function as infrastructure for adjacent fields.',
+        head: 'Venture capital accelerates frontier technologies',
+        body: 'Across the 500,000-patent sample, VC-backed patents receive more than double the peer-normalized forward citations of non-VC patents (2.03 vs. 0.98). Since citations are standardized against 4-character CPC subclass and grant-year peer groups, this difference represents a true advantage rather than a byproduct of faster-moving technology categories.',
       },
       {
-        head: 'Biotech–computing convergence drives the premium',
-        body: 'Disaggregating by section pair, the largest divergence appears in citations flowing from Section A (Human Necessities, which houses biotech) into Section G (Physics, computing) and back. This bidirectional cross-citation is the patent fingerprint of the biotech–computing convergence — CRISPR tools citing machine-learning classification methods, computational protein-folding patents citing wet-lab techniques. VC dollars concentrate exactly here.',
+        head: 'The DeepTech multiplier',
+        body: 'The venture-backing premium is not uniform. Instead, it is heavily concentrated in DeepTech, hardware, and computational fields. In Electricity (Section H) and Physics & Computing (Section G), VC-backed patents achieve 2.68× and 2.34× their peer-group citation benchmarks, respectively. In these frontier sectors, risk-tolerant equity perfectly aligns with longer development cycles.',
       },
       {
-        head: 'The effect persists after controlling for technology category',
-        body: 'One might worry the result is driven by sector composition — VCs over-invest in naturally cross-disciplinary fields. But within each of the 35 NBER technology categories, the VC premium on cross-class citation rates survives. The gap is not a story about sector selection alone; something about the VC relationship itself — monitoring, strategic network access, IP counsel — produces broader-ranging patents.',
+        head: 'Incumbency in mature sectors',
+        body: 'In traditional industrial categories like Operations & Transport (Section B) and Mechanical Engineering (Section F), VC-backed inventions underperform the 1.0 parity benchmark. This suggests that in more mature engineering sectors driven by supply chains and manufacturing optimizations, venture capital provides no inherent innovation advantage over corporate incumbents.',
       },
     ],
   },
@@ -44,86 +48,98 @@ const sections = [
     id: 'science-intensity',
     chapter: 'B',
     label: 'Science Intensity',
-    subtitle: 'NPL citations and scientific linkage',
-    anchor: '2.4×',
-    anchorCaption: 'higher non-patent literature citation rate',
+    subtitle: 'Non-patent literature (NPL) and academic proximity',
+    anchor: '44.6%',
+    anchorCaption: 'non-patent literature ratio',
     thesis:
-      'The gap between VC-backed patents and their peers is widest exactly where scientific novelty matters most: at the boundary of basic and applied research.',
+      'Venture-funded technologies build more substantially on academic literature and scientific discoveries than their non-VC peers.',
     stats: [
-      { value: '2.4×', label: 'NPL citation ratio', note: 'VC vs. non-VC, same grant year' },
-      { value: '38%', label: 'VC patents citing ≥1 journal article', note: 'vs. 16% in non-VC cohort' },
-      { value: 'Seed', label: 'Stage with highest NPL ratio', note: 'Effect attenuates by Series C' },
+      { value: '44.6%', label: 'VC NPL Ratio', note: 'vs. 36.9% non-VC (p=0.0047)' },
+      { value: '0.2-0.9', label: 'VC NPL Distribution', note: 'Sustained density across high values' },
+      { value: 'Zero', label: 'Non-VC Concentration', note: 'Baseline clusters heavily near zero' },
     ],
+    figure: {
+      src: '/figure2a.png',
+      alt: 'Figure 2: Empirical Distribution of Science Intensity',
+    },
     findings: [
       {
-        head: 'Non-patent literature citations as a science thermometer',
-        body: 'Patent examiners and applicants cite two kinds of prior art: earlier patents (backward patent citations) and non-patent literature — journal papers, conference proceedings, technical reports, preprints. The NPL share of total citations is the closest thing to a science-proximity index available at patent scale. Across 7.8 million grants, VC-backed patents carry a 2.4× premium on this ratio.',
+        head: 'A higher reliance on scientific research',
+        body: 'Science intensity is captured via the Non-Patent Literature (NPL) ratio, reflecting the proportion of preceding technology grounded in academic literature and scientific papers rather than existing patent disclosures. VC-backed patents exhibit a statistically significant premium, carrying a 44.6% NPL ratio compared to 36.9% for non-VC patents.',
       },
       {
-        head: 'Journal citations cluster in high-impact outlets',
-        body: 'Among the NPL references that appear in VC-backed patents, the distribution of citing journals is strikingly skewed toward high-impact venues: Nature, Science, Cell, PNAS, and IEEE Transactions account for a disproportionate share. This is not merely a byproduct of biotech exposure — the pattern holds in semiconductor, materials, and software patents as well, wherever VC financing appears.',
+        head: 'Sustained proximity to open science',
+        body: 'Kernel density estimates of the NPL ratio demonstrate a distributional difference. While non-VC patents cluster heavily near zero, indicating little to no academic grounding, VC-backed patents show a relatively uniform density across the 0.2 to 0.9 range.',
       },
       {
-        head: 'Science proximity decays as VC stage advances',
-        body: 'The NPL premium is sharpest at seed (2.9×) and Series A (2.6×), falls to 2.1× at Series B, and converges toward the non-VC baseline by Series C and later. This decay curve is consistent with a selection story: early-stage VCs are betting on science; later-stage VCs are scaling businesses. The patent record corroborates what deal-flow practitioners report anecdotally about the shift in diligence criteria across stages.',
+        head: 'Scientific anchoring as a defensive strategy',
+        body: 'This sustained proximity to open scientific research suggests a specific commercial strategy. This is due to the fact that anchoring claims in peer-reviewed scientific literature provides venture-backed startups with increased protection against prior-art invalidation during post-grant review and infringement proceedings.',
+      },
+    ],
+  },
+  {
+    id: 'policy-trends',
+    chapter: 'C',
+    label: 'Policy Responsiveness',
+    subtitle: 'Adaptability to the America Invents Act',
+    anchor: '2011',
+    anchorCaption: 'AIA reform enactment',
+    thesis:
+      'VC-backed firms are highly sensitive to policy reform, rapidly adapting drafting strategies to lock in defensible IP while non-VC filers remain static.',
+    stats: [
+      { value: '15.6', label: 'VC Claims (2011)', note: 'Compression during AIA enactment' },
+      { value: '23.4', label: 'VC Claims (2014)', note: 'Aggressive post-reform expansion' },
+      { value: 'Flat', label: 'Non-VC trend', note: 'Remained at 14-15 claims throughout' },
+    ],
+    figure: {
+      src: '/figure3.png',
+      alt: 'Figure 3: Distribution of Total Claims by Funding Status',
+    },
+    findings: [
+      {
+        head: 'The America Invents Act as a catalyst',
+        body: 'Examining claim drafting around the 2011 Leahy-Smith America Invents Act (AIA) shows a divergence in cohort behavior. The transition to a first-inventor-to-file regime served as an external shock to the patent system, testing the adaptability of various filing entities.',
+      },
+      {
+        head: 'Rapid adaptation vs. a static baseline',
+        body: 'Non-VC filers exhibited minimal to no change in behavior, with average claim counts remaining flat between 14 and 15 from 2008 through 2014. In contrast, VC-backed claims sank to 15.6 in the 2011 reform year before surging rapidly to 20.5 in 2012 and reaching a series high of 23.4 by 2014.',
+      },
+      {
+        head: 'Reevaluating reform outcomes',
+        body: 'This high degree of responsiveness suggests that venture-backed companies possess the legal resources and deep-set strategies to adapt to procedural reforms. Consequently, reforms like the AIA may inadvertently increase the defensive moats of well-capitalized firms while failing to alter the trajectory of general inventors, potentially limiting broader innovation through competition.',
       },
     ],
   },
   {
     id: 'patent-scope',
-    chapter: 'C',
-    label: 'Patent Scope & Depth',
-    subtitle: 'Classification breadth and technological coverage',
-    anchor: '+31%',
-    anchorCaption: 'broader independent claim counts on average',
-    thesis:
-      'VC-backed patents stake out more IP territory — not just in claim count, but in the technological surface area they protect.',
-    stats: [
-      { value: '+31%', label: 'Independent claims per patent', note: 'VC-backed mean vs. non-VC mean' },
-      { value: '2.7', label: 'Avg. CPC subclasses per VC patent', note: 'vs. 1.9 for non-VC cohort' },
-      { value: '+18%', label: 'Specification page count', note: 'Longer specs, more embodiments' },
-    ],
-    findings: [
-      {
-        head: 'Claim breadth as intentional IP architecture',
-        body: 'Independent claims define the outer boundary of patent protection. More independent claims means more distinct protected inventions within a single grant — each independently enforceable. VC-backed patents average 31% more independent claims than non-VC patents in the same technology class and grant year. This excess is not random claim inflation; it correlates with the number of distinct embodiments described in the specification, suggesting deliberate prosecution strategy.',
-      },
-      {
-        head: 'CPC subclass count as a scope proxy',
-        body: "The USPTO assigns CPC codes at the subclass level (four characters, e.g. H04L) based on the invention's technical subject matter. A patent with multiple CPC subclasses is, by definition, an invention that spans more of the technology map. VC-backed patents average 2.7 CPC subclasses per grant versus 1.9 for non-VC patents — a 42% wider technological footprint. This breadth compounds the cross-citation premium: more classifications means more surfaces for future inventors to cite from.",
-      },
-      {
-        head: 'Longer specifications signal more embodiments',
-        body: 'Specification length in pages is a noisy but useful heuristic for the depth of patent disclosure. More pages typically means more disclosed embodiments — and more embodiments give prosecutors more material to draft claims from. VC-backed patents are 18% longer in specification on average. Combined with higher claim counts, this paints a picture of patents drafted with room to grow: initial prosecution plus continuation and divisional applications filed as the commercial landscape clarifies.',
-      },
-    ],
-  },
-  {
-    id: 'claims-policy',
     chapter: 'D',
-    label: 'Claims Policy Trends',
-    subtitle: 'Claim counts, independence ratios, and legal breadth',
-    anchor: '1976–',
-    anchorCaption: 'five decades of claims data analysed',
+    label: 'Legal Scope & Defensibility',
+    subtitle: 'Claim counts and IP moats',
+    anchor: '22.2',
+    anchorCaption: 'average claims per VC patent',
     thesis:
-      'The VC claims premium has grown over time — and two external shocks, Alice Corp. and the America Invents Act, left measurable marks on both cohorts.',
+      'Venture-backed startups construct broader claim trees to maximize defensive moats against incumbent litigation.',
     stats: [
-      { value: '2003', label: 'Year VC claims premium inflected upward', note: 'Coincides with genomics boom' },
-      { value: '−22%', label: 'Software claim drop post-Alice (2014)', note: 'Non-VC cohort fell further (−31%)' },
-      { value: '0.41', label: 'Independence ratio (VC mean)', note: 'Indep. ÷ total claims; non-VC: 0.33' },
+      { value: '22.2', label: 'Mean claims (VC)', note: 'vs. 16.0 non-VC (p<10⁻¹⁸⁵)' },
+      { value: '19', label: 'Median claims (VC)', note: 'Interquartile range: 11-29' },
+      { value: '14', label: 'Median claims (Non-VC)', note: 'Interquartile range: 8-21' },
     ],
+    figure: {
+      src: '/figure4.png',
+      alt: 'Figure 4: Claim Count Before and After 2011 Policy Reform',
+    },
     findings: [
       {
-        head: 'A structural shift in claims strategy around 2003',
-        body: "Plotting the time series of mean independent claims per patent separately for VC and non-VC cohorts reveals a structural divergence beginning around 2003. Prior to that year, the two series track closely. After 2003 — coinciding with the genomics commercialisation wave and the surge in platform software patents — the VC cohort's claim count grows at roughly twice the rate of the non-VC baseline. The gap has widened in each subsequent decade.",
+        head: 'Broader legal defensibility',
+        body: 'Legal defensibility is heavily dictated by total claim counts. VC-backed patents are substantially broader, averaging 22.2 claims compared to 16.0 for the non-VC baseline. This difference indicates that VC-backed patents are more defensively drafted and significantly more resource-intensive to prosecute and likely to initially formulate as well requiring more funds.',
       },
       {
-        head: 'Alice Corp. as a natural experiment',
-        body: "The Supreme Court's 2014 Alice Corp. decision invalidated a wide class of software patent claims as abstract ideas. This created a sharp, exogenous shock to patent drafting strategy. In the year following Alice, software-class independent claim counts fell 22% in the VC cohort and 31% in the non-VC cohort. The VC cohort's smaller decline suggests that VC-backed patent counsel adapted faster — pivoting toward hardware-anchored claims and method claims tied to specific technical implementations — consistent with access to higher-quality IP legal resources.",
+        head: 'An upward shift across all quartiles',
+        body: 'The distribution of total claims shows an upward shift for venture-backed IP. The median VC-backed patent contains 19 claims (with an interquartile range of 11-29), separating from the non-VC median of 14 claims (IQR: 8-21) even when suppressing outliers.',
       },
       {
-        head: 'The independence ratio is a durable signal',
-        body: "The independence ratio — independent claims divided by total claims — captures how much of a patent's claim set is self-standing versus dependent on a parent claim. A higher ratio implies each protected embodiment is independently enforceable, raising the cost of designing around any single claim. VC-backed patents maintain an independence ratio of 0.41 versus 0.33 for non-VC patents, and this gap has been statistically stable since the early 1990s, suggesting it reflects a persistent drafting norm rather than a transient strategy shift.",
+        head: 'Constructing the IP moat',
+        body: 'This elevated claim count represents intentional legal architecture. By maximizing the number of claims, venture-backed startups raise the cost and complexity of designing around their intellectual property, locking in more defensible commercial territory for future development and M&A exits.',
       },
     ],
   },
@@ -431,6 +447,31 @@ export default function Findings() {
           line-height: 1.4;
         }
 
+        /* ── Figures (Boxed Framing like Home.tsx) ── */
+        .figure-container {
+          margin: 3rem 0;
+          border-top: 1px solid var(--ink);
+          border-bottom: 1px solid var(--ink);
+          padding: 1.25rem 0;
+          background: transparent;
+        }
+        .figure-inner-box {
+          border-left: 1px solid var(--ink);
+          border-right: 1px solid var(--ink);
+          padding: 1.75rem 2rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: transparent;
+        }
+        .figure-img {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          display: block;
+          object-fit: contain;
+        }
+
         /* ── Finding entries ── */
         .finding-entries { display: flex; flex-direction: column; gap: 0; }
         .finding-entry {
@@ -502,6 +543,7 @@ export default function Findings() {
           .nav-item:last-child { border: none; }
           .stat-row { grid-template-columns: 1fr; }
           .stat-cell + .stat-cell { border-left: none; border-top: 1px solid var(--rule); }
+          .figure-inner-box { padding: 1rem 0.75rem; }
         }
         @media (max-width: 480px) {
           .page-wrap { padding: 0 1.25rem; }
@@ -532,9 +574,9 @@ export default function Findings() {
             <p className="page-header-eyebrow">Four empirical dimensions</p>
             <h1 className="page-header-title">What the patent record reveals<br />about venture-backed innovation</h1>
             <p className="page-header-desc">
-              Across 7.8 million USPTO grants, VC-backed patents diverge from
-              the non-VC baseline on every measurable axis — citation structure,
-              scientific proximity, scope of protection, and claims architecture.
+              Across 500,000 U.S. patents granted between 2000 and 2020[cite: 1], VC-backed patents diverge from
+              the non-VC baseline on every measurable axis — citation impact,
+              scientific proximity, legal scope, and responsiveness to policy reform[cite: 1].
               These pages present the four core findings in detail.
             </p>
           </div>
@@ -590,6 +632,20 @@ export default function Findings() {
                     ))}
                   </div>
 
+                  {/* Figure Box */}
+                  {s.figure && (
+                    <div className="figure-container">
+                      <div className="figure-inner-box">
+                        <img
+                          src={s.figure.src}
+                          alt={s.figure.alt}
+                          className="figure-img"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Findings */}
                   <div className="finding-entries">
                     {s.findings.map((f) => (
@@ -608,9 +664,9 @@ export default function Findings() {
           {/* ── Footer ── */}
           <footer className="footer">
             <p className="footer-note">
-              Data: USPTO PatentsView full grant history · SEC EDGAR Form D filings ·
-              NBER VC–patent match file · CPC classification records.
-              All metrics reflect cohort averages; individual patent outcomes vary.
+              Data: 500,000 U.S. patents sampled from 2000-2020 via USPTO Bulk Releases[cite: 1] ·
+              Matched to PitchBook and VentureSource institutional financing rounds[cite: 1].
+              All comparisons utilize Welch's unequal variance formulation[cite: 1].
             </p>
             <span className="footer-badge">QSS 20 · 2026</span>
           </footer>

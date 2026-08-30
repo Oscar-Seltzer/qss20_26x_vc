@@ -13,79 +13,69 @@ const FONT_LINK =
 const pipelineSteps = [
   {
     step: '01',
-    label: 'VC Financing Records',
-    source: 'PitchBook · Crunchbase · SEC Form D',
+    label: 'Cohort Extraction & Citation Networks',
+    source: 'DuckDB · PatentsView Bulk Releases',
     detail:
-      'Company-level investment events are drawn from PitchBook and Crunchbase, supplemented with SEC EDGAR Form D filings (exempt offering notices) as an independent verification source. Each record is standardised to a canonical company name, CIK identifier, and deal close date.',
+      'DuckDB streams relational bulk tables (g_cpc_current, g_us_patent_citation encompassing >130M dyads, and g_other_reference) to extract a 500,000-patent sample granted between 2000 and 2020. Patent-level forward, backward, and NPL citation totals are calculated and exported as step1_metrics.parquet.',
   },
   {
     step: '02',
-    label: 'Company → Patent Assignee Match',
-    source: 'USPTO PatentsView disambiguated assignee table',
+    label: 'Claims Matching & Parsing',
+    source: 'PyArrow · patent_claims_stats.dta.zip',
     detail:
-      'VC-backed companies are matched to USPTO assignee records using the PatentsView disambiguated assignee table (g_assignee_disambiguated.tsv). Matching proceeds in priority order: exact CIK match via SEC cross-reference, then fuzzy organisation-name matching with a Jaro-Winkler threshold of 0.92, then manual review for the 340 highest-value ambiguous cases.',
+      'Historical claim-level records (tracking total claims, independent claim counts, and claim word lengths) are streamed from compressed Stata files in 5-million-row chunks via PyArrow, joined on unique patent identifiers, and exported as step2_claims.parquet.',
   },
   {
     step: '03',
-    label: 'Patent-Level Feature Extraction',
-    source: 'PatentsView · USPTO CPC · g_us_patent_citation',
+    label: 'Master Normalization & Panel Assembly',
+    source: 'DuckDB · patentvc_enhanced_4var.dta · cleaned_patent_panel.parquet',
     detail:
-      'For each matched patent, we extract: grant date, application date, all CPC codes (g_cpc_current.tsv), backward patent citations (g_us_patent_citation.tsv), non-patent literature references (g_other_reference.tsv), and claim statistics from the patent_claims_stats dataset. All joins are keyed on patent_id (VARCHAR) to prevent silent integer-overflow mismatches.',
-  },
-  {
-    step: '04',
-    label: 'VC Flag & Cohort Assignment',
-    source: 'Deal date × patent application date',
-    detail:
-      'A patent is flagged VC-backed (VC = 1) if its assignee company received at least one venture financing round whose close date precedes the patent application date. This preserves temporal causality: only capital that could have influenced the invention is counted. Patents with multiple assignees where ≥1 is VC-backed are included in the VC cohort.',
-  },
-  {
-    step: '05',
-    label: 'Master Panel Construction',
-    source: 'DuckDB merge · cleaned_patent_panel.csv',
-    detail:
-      'All tables are merged in DuckDB into a master panel of 7,842,115 patent-level observations spanning 1976–2024. The final panel includes the VC flag, all citation metrics, CPC classification features, claim statistics, assignee type, and grant-year and technology-class fixed-effect keys.',
+      'Step 1 and Step 2 datasets are merged with the Patent VC enhanced linkage panel (matching PitchBook/VentureSource rounds to grant numbers) and disambiguated corporate assignees. Raw citations are peer-normalized against 4-character CPC subclass × grant year peer groups.',
   },
 ]
 
 const models = [
   {
-    id: 'ols-baseline',
-    label: 'OLS Baseline',
-    tag: 'Specification 1',
-    equation: 'y_{it} = α + β·VC_{it} + γ·X_{it} + ε_{it}',
+    id: 'norm-citations',
+    label: 'Peer-Normalized Forward Citation Index',
+    tag: 'Formula 1',
+    numerator: 'Raw Forward Citationsᵢ',
+    denominator: 'E[Raw Forward Citations | CPC Subclassᵢ, Grant Yearᵢ]',
+    resultSymbol: 'Normalized Citationsᵢ =',
     vars: [
-      { sym: 'y_{it}', desc: 'Outcome for patent i granted in year t (NPL ratio, claim count, cross-CPC indicator)' },
-      { sym: 'VC_{it}', desc: 'Binary indicator: 1 if patent assignee received VC financing before application date' },
-      { sym: 'X_{it}', desc: 'Patent-level controls: log(backward citations), CPC section dummies, application-year' },
-      { sym: 'β', desc: 'Coefficient of interest — the raw VC premium on the outcome' },
+      { sym: 'Raw Citationsᵢ', desc: 'Total forward patent citations accumulated by patent i' },
+      { sym: 'E[· | Subclass, Year]', desc: 'Empirical mean forward citations of all patents in the same 4-character CPC subclass and grant year' },
+      { sym: '1.0 Benchmark', desc: 'Represents exact parity with technology-class and vintage peer group' },
     ],
-    note: 'Robust standard errors clustered at the assignee-organisation level throughout.',
+    note: 'Corrects for mechanical truncation artifacts from patent vintage and systemic velocity differences across sectors.',
   },
   {
-    id: 'twfe',
-    label: 'Two-Way Fixed Effects',
-    tag: 'Specification 2 — Primary',
-    equation: 'y_{it} = β·VC_{it} + X_{it}·Γ + μ_c + τ_t + ε_{it}',
+    id: 'npl-ratio',
+    label: 'Science Intensity Metric',
+    tag: 'Formula 2',
+    numerator: 'NPL Citationsᵢ',
+    denominator: 'Backward Patent Citationsᵢ + NPL Citationsᵢ',
+    resultSymbol: 'NPL Ratioᵢ =',
     vars: [
-      { sym: 'μ_c', desc: 'NBER technology-category fixed effect (35 categories) — absorbs time-invariant sector composition' },
-      { sym: 'τ_t', desc: 'Grant-year fixed effect — absorbs aggregate patent-office trends, examiner cohort effects, and macro conditions' },
-      { sym: 'Γ', desc: 'Vector of coefficients on patent-level controls X_{it}' },
-      { sym: 'β', desc: 'Within-category, within-year VC premium — the primary reported estimate' },
+      { sym: 'NPL Citationsᵢ', desc: 'Number of non-patent literature references (academic journals, proceedings, preprints)' },
+      { sym: 'Backward Citationsᵢ', desc: 'Count of citations to prior patent disclosures' },
+      { sym: 'Bounded [0, 1]', desc: 'Proportion of prior art directly anchored in foundational scientific literature' },
     ],
-    note: 'Technology-category × grant-year interaction fixed effects are used in robustness checks to allow sector trends to vary by year.',
+    note: 'Captures proximity to open science and foundational research at the patent level.',
   },
   {
-    id: 'stage',
-    label: 'Deal-Stage Heterogeneity',
-    tag: 'Specification 3',
-    equation: 'y_{it} = Σ_s β_s·Stage_{sit} + X_{it}·Γ + μ_c + τ_t + ε_{it}',
+    id: 'welch-ttest',
+    label: "Welch's Two-Sample t-Test Formulation",
+    tag: 'Statistical Test',
+    numerator: 'X̄_VC - X̄_NonVC',
+    denominator: '√( (s²_VC / n_VC) + (s²_NonVC / n_NonVC) )',
+    resultSymbol: 't =',
     vars: [
-      { sym: 'Stage_{sit}', desc: 'Indicator for VC deal stage s ∈ {Seed, Series A, Series B, Series C+} preceding application' },
-      { sym: 'β_s', desc: 'Stage-specific VC premium — tests whether science intensity decays with investment maturity' },
-      { sym: 'Omitted category', desc: 'Non-VC patents (VC = 0); all β_s are interpretable relative to the non-VC baseline' },
+      { sym: 'X̄_VC, X̄_NonVC', desc: 'Sample group means for normalized citations, total claims, and NPL ratios' },
+      { sym: 's², n', desc: 'Sample variances and cohort sizes (VC: n=9,536; Non-VC: n=490,464)' },
+      { sym: 'Unequal Variance', desc: 'Does not assume equal variances, accommodating severe cohort sample size imbalance' },
     ],
-    note: 'Where a company received multiple rounds before the application date, the earliest round\'s stage is used to capture the founding financing context.',
+    note: 'Degrees of freedom adjusted according to the Welch–Satterthwaite equation across all outcome comparisons.',
   },
 ]
 
@@ -93,41 +83,41 @@ const biasControls = [
   {
     id: 'truncation',
     chapter: 'i',
-    label: 'Citation Truncation Bias',
-    head: 'Forward citations are mechanically truncated for recent grants',
-    body: 'A patent granted in 2020 has had at most four years to accumulate forward citations; one granted in 2000 has had twenty-four. Naively comparing raw forward-citation counts across cohorts would confound quality differences with this mechanical truncation. We address this in two ways: (1) all forward-citation outcomes are measured within a fixed five-year post-grant window; (2) as a robustness check, we apply the Hall–Jaffe–Trajtenberg (2001) truncation correction, which re-weights citations by the estimated citation-age distribution for each technology class.',
-    pills: ['5-year window', 'HJT correction', 'Class-specific weights'],
+    label: 'Vintage & Classification Normalization',
+    head: 'Peer benchmarking against subclass × grant-year cohorts',
+    body: 'Older patents mechanically accumulate more citations than recent grants, and citation velocities differ substantially across fields. To prevent truncation and vintage bias from confounding results, forward citations are normalized relative to the empirical mean of patents within the exact same 4-character CPC subclass and grant year.',
+    pills: ['Subclass Peer Mean', 'Grant-Year Matching', '1.0 Parity Index'],
   },
   {
-    id: 'sample-filters',
+    id: 'sample-balance',
     chapter: 'ii',
-    label: 'Sample Filtering Rules',
-    head: 'Exclusions that preserve internal validity',
-    body: 'We drop patents with missing CPC codes (0.4% of the corpus) and patents whose application date precedes 1976 (the start of consistent electronic records). Design patents and plant patents are excluded; only utility patents are retained. Patents with more than 500 backward citations are winsorised at the 99th percentile of the citation distribution within technology class and grant year to limit the influence of outlier filing strategies on regression estimates.',
-    pills: ['Utility patents only', '1976–2024', 'CPC non-missing', '99th-pctile winsorise'],
+    label: 'Sample Imbalance & Skewness Corrections',
+    head: 'Welch’s t-testing and logarithmic claim transformations',
+    body: 'Because the VC cohort is small relative to the broader population (9,536 VC vs. 490,464 non-VC), standard t-tests risk bias. Therefore, Welch’s unequal-variance formulation is applied. Additionally, total claim counts exhibit extreme positive skewness, corrected using ln(Total Claims + 1).',
+    pills: ['Welch’s t-Test', 'Logarithmic Claims ln(x+1)', 'Skewness Adjustment'],
   },
   {
-    id: 'examiner',
+    id: 'sector-heterogeneity',
     chapter: 'iii',
-    label: 'Examiner & Art-Unit Effects',
-    head: 'Unobserved examiner leniency as a confounder',
-    body: 'Patent examiners vary in their propensity to grant claims and to require NPL references. If VC-backed applicants systematically face different examiner pools — plausible if prestigious law firms concentrate their filings in particular art units — the VC coefficient could capture examiner leniency rather than patent quality. We run an auxiliary regression of the outcome on art-unit fixed effects and confirm that the VC premium survives after residualising on art-unit means. Examiner-level fixed effects are also tested where examiner IDs are available in the PatentsView examiner table.',
-    pills: ['Art-unit FE', 'Examiner leniency residual', 'PatentsView examiner table'],
+    label: 'Sector-Specific Disaggregation',
+    head: 'CPC technology section partitioning (A–H)',
+    body: 'Treating venture funding as a homogeneous treatment obscures domain differences. We evaluate outcomes partitioned across 6 major primary CPC sections (A, B, C, F, G, H), excluding Sections D (Textiles) and E (Fixed Constructions) due to insufficient VC observation counts.',
+    pills: ['6 CPC Sections', 'DeepTech vs. HardTech', 'Sparse Class Exclusion'],
   },
   {
-    id: 'selection',
+    id: 'limitations',
     chapter: 'iv',
-    label: 'Selection & Endogeneity',
-    head: 'VCs choose the best companies — by construction',
-    body: 'The most fundamental identification challenge is that VCs select into better companies, and better companies file better patents. The TWFE estimator absorbs time-invariant sector composition and year-level trends, but cannot fully resolve selection on unobservables. We present two additional exercises: (1) a matched-sample analysis using coarsened exact matching on NBER category, grant year, and assignee type, which compares VC-backed patents to observationally similar non-VC patents; (2) a within-company analysis restricted to companies that file both before and after a VC round, using the pre-round patents as the counterfactual.',
-    pills: ['CEM matching', 'Within-company DiD', 'Pre-round counterfactual'],
+    label: 'Identification & Selection Limitations',
+    head: 'Associational nature and unobserved founder quality',
+    body: 'Because venture capitalists actively select high-caliber founding teams who might produce superior IP regardless of funding, these estimates reflect associational relationships rather than causal effects. Future work requires round-level stages and more policy data.',
+    pills: ['Associational Panel', 'Selection Effects', 'Firm-Age Unobservables'],
   },
 ]
 
 const chapters = [
-  { id: 'pipeline', chapter: '1', label: 'Data Matching Pipeline' },
-  { id: 'models', chapter: '2', label: 'Econometric Models' },
-  { id: 'bias', chapter: '3', label: 'Bias Controls & Filtering' },
+  { id: 'pipeline', chapter: '1', label: 'Data Streaming & ETL Pipeline' },
+  { id: 'models', chapter: '2', label: 'Empirical Metrics & Formulas' },
+  { id: 'bias', chapter: '3', label: 'Bias Adjustments & Robustness' },
 ]
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -335,7 +325,7 @@ export default function Methodology() {
           margin-top: 3.5rem;
         }
 
-        /* ── Section eyebrow (reused from Findings) ── */
+        /* ── Section eyebrow ── */
         .section-eyebrow {
           display: flex;
           align-items: center;
@@ -379,20 +369,17 @@ export default function Methodology() {
           margin-bottom: 2.5rem;
         }
 
-        /* ────────────────────────────────────────────
-           PIPELINE — vertical stepped diagram
-        ──────────────────────────────────────────── */
+        /* ── PIPELINE ── */
         .pipeline {
           display: flex;
           flex-direction: column;
           gap: 0;
           position: relative;
         }
-        /* Continuous vertical rule running behind all steps */
         .pipeline::before {
           content: '';
           position: absolute;
-          left: 1.05rem;       /* centres on the dot */
+          left: 1.05rem;
           top: 1.1rem;
           bottom: 1.1rem;
           width: 1px;
@@ -410,7 +397,6 @@ export default function Methodology() {
         }
         .pipeline-step:last-child { padding-bottom: 0; }
 
-        /* Terracotta dot + step number */
         .step-node {
           display: flex;
           flex-direction: column;
@@ -460,9 +446,7 @@ export default function Methodology() {
           color: var(--mid);
         }
 
-        /* ────────────────────────────────────────────
-           EQUATIONS
-        ──────────────────────────────────────────── */
+        /* ── EQUATIONS / METRICS (Stacked Fraction Styling) ── */
         .model-cards {
           display: flex;
           flex-direction: column;
@@ -495,30 +479,43 @@ export default function Methodology() {
           white-space: nowrap;
         }
 
-        /* Equation block — monospaced, left-ruled in terracotta */
         .equation-block {
-          padding: 1.25rem 1.5rem;
+          padding: 1.5rem;
           border-bottom: 1px solid var(--rule);
           border-left: 3px solid var(--accent);
           background: var(--ground);
           overflow-x: auto;
         }
-        .equation {
+
+        /* Stacked fraction layout */
+        .equation-display {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
           font-family: 'Georgia', 'Times New Roman', serif;
           font-size: 1.05rem;
           font-style: italic;
           color: var(--ink);
-          line-height: 1.5;
-          white-space: nowrap;
-          letter-spacing: 0.01em;
         }
-        /* Greek and math styling within equations */
-        .eq-greek {
-          font-family: 'Georgia', serif;
-          font-style: italic;
+        .eq-lhs {
+          white-space: nowrap;
+        }
+        .fraction {
+          display: inline-flex;
+          flex-direction: column;
+          vertical-align: middle;
+          text-align: center;
+        }
+        .numerator {
+          padding: 0 0.25rem 0.3rem 0.25rem;
+          border-bottom: 1px solid var(--ink);
+          font-size: 0.95rem;
+        }
+        .denominator {
+          padding: 0.3rem 0.25rem 0 0.25rem;
+          font-size: 0.95rem;
         }
 
-        /* Variable legend */
         .var-table {
           padding: 1rem 1.5rem;
           display: grid;
@@ -556,9 +553,7 @@ export default function Methodology() {
           line-height: 1.5;
         }
 
-        /* ────────────────────────────────────────────
-           BIAS CONTROLS
-        ──────────────────────────────────────────── */
+        /* ── BIAS CONTROLS ── */
         .bias-entries {
           display: flex;
           flex-direction: column;
@@ -695,12 +690,10 @@ export default function Methodology() {
           {/* ── Page header ── */}
           <div className="page-header">
             <p className="page-header-eyebrow">Empirical framework</p>
-            <h1 className="page-header-title">Data pipeline, identification,<br />and robustness</h1>
+            <h1 className="page-header-title">Data pipeline, metrics,<br />and statistical testing</h1>
             <p className="page-header-desc">
-              How 7.8 million patent records are matched to VC financing events,
-              what econometric models isolate the causal estimates, and how
-              citation truncation, examiner heterogeneity, and selection bias
-              are addressed.
+              How 500,000 USPTO patent records were extracted, processed via DuckDB and PyArrow streaming,
+              peer-normalized against technology cohorts, and evaluated using Welch's t-tests and kernel density estimation.
             </p>
           </div>
 
@@ -734,14 +727,14 @@ export default function Methodology() {
               >
                 <div className="section-eyebrow">
                   <span className="section-chapter">1</span>
-                  <span className="section-label-text">Data Matching Pipeline</span>
+                  <span className="section-label-text">Data Streaming &amp; ETL Pipeline</span>
                   <div className="section-eyebrow-rule" aria-hidden="true" />
                 </div>
-                <h2 className="section-title">Linking venture financing to the patent record</h2>
+                <h2 className="section-title">Vectorized ETL and master panel assembly</h2>
                 <p className="section-intro">
-                  The core identification challenge is connecting investment events — which live in
-                  deal databases and SEC filings — to patent grants, which live in the USPTO corpus.
-                  The five-stage pipeline below describes how that linkage is constructed, in order.
+                  To process hundreds of millions of relational records without compute bottlenecks,
+                  the pipeline executes in three streaming stages using DuckDB's vectorized OLAP engine
+                  and PyArrow chunked conversions.
                 </p>
 
                 <div className="pipeline" role="list">
@@ -769,15 +762,13 @@ export default function Methodology() {
               >
                 <div className="section-eyebrow">
                   <span className="section-chapter">2</span>
-                  <span className="section-label-text">Econometric Models</span>
+                  <span className="section-label-text">Empirical Metrics &amp; Formulas</span>
                   <div className="section-eyebrow-rule" aria-hidden="true" />
                 </div>
-                <h2 className="section-title">Identification strategy</h2>
+                <h2 className="section-title">Formulas and hypothesis testing</h2>
                 <p className="section-intro">
-                  Three regression specifications are estimated in sequence. The OLS baseline
-                  establishes the raw correlation; the two-way fixed-effects model is the
-                  primary specification reported in all tables; the deal-stage model tests
-                  heterogeneity across investment maturity.
+                  Patents are evaluated across three primary outcome dimensions: peer-normalized forward citation impact,
+                  academic science intensity (NPL ratio), and claim-based legal defensibility compared via Welch's t-tests.
                 </p>
 
                 <div className="model-cards">
@@ -788,9 +779,15 @@ export default function Methodology() {
                         <span className="model-card-tag">{m.tag}</span>
                       </div>
 
-                      {/* Equation */}
-                      <div className="equation-block" aria-label={`Equation: ${m.equation}`}>
-                        <div className="equation">{m.equation}</div>
+                      {/* Stacked Equation Block */}
+                      <div className="equation-block">
+                        <div className="equation-display">
+                          <span className="eq-lhs">{m.resultSymbol}</span>
+                          <div className="fraction">
+                            <span className="numerator">{m.numerator}</span>
+                            <span className="denominator">{m.denominator}</span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Variable legend */}
@@ -817,14 +814,13 @@ export default function Methodology() {
               >
                 <div className="section-eyebrow">
                   <span className="section-chapter">3</span>
-                  <span className="section-label-text">Bias Controls &amp; Filtering</span>
+                  <span className="section-label-text">Bias Adjustments &amp; Robustness</span>
                   <div className="section-eyebrow-rule" aria-hidden="true" />
                 </div>
-                <h2 className="section-title">Threats to validity and how they are addressed</h2>
+                <h2 className="section-title">Threats to validity, controls, and limitations</h2>
                 <p className="section-intro">
-                  Four distinct sources of potential bias are documented and mitigated:
-                  mechanical citation truncation, sample composition choices, unobserved
-                  examiner heterogeneity, and selection of better companies into VC financing.
+                  Methodological adjustments to address vintage truncation, cohort sample size variance,
+                  positive claim count skewness, and the associational nature of venture selection.
                 </p>
 
                 <div className="bias-entries">
@@ -851,9 +847,8 @@ export default function Methodology() {
           {/* ── Footer ── */}
           <footer className="footer">
             <p className="footer-note">
-              Data: USPTO PatentsView · SEC EDGAR Form D · PitchBook · Crunchbase ·
-              NBER VC–patent match. Regression estimates computed in Python (statsmodels).
-              Replication code available on request.
+              Data: USPTO PatentsView Bulk Releases · Patent VC Enhanced Linkage Panel ·
+              USPTO Patent Claims Statistics. Pipeline implemented in DuckDB and PyArrow.
             </p>
             <span className="footer-badge">QSS 20 · 2026</span>
           </footer>

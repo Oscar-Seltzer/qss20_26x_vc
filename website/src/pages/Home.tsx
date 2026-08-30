@@ -600,7 +600,7 @@ export default function Home() {
             <div className="figures-grid">
               <figure className="figure-card">
                 <img
-                  src="/figure1_vert_cpc_section_citations.png"
+                  src="/figure1.png"
                   alt="Mean Normalized Forward Citation Impact Across CPC Technology Sections"
                   className="figure-img"
                 />
@@ -608,7 +608,7 @@ export default function Home() {
 
               <figure className="figure-card">
                 <img
-                  src="/figure4_claims_distribution.png"
+                  src="/figure4.png"
                   alt="Distribution of Total Claims by Funding"
                   className="figure-img"
                 />
