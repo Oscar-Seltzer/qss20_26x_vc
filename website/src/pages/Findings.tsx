@@ -574,9 +574,9 @@ export default function Findings() {
             <p className="page-header-eyebrow">Four empirical dimensions</p>
             <h1 className="page-header-title">What the patent record reveals<br />about venture-backed innovation</h1>
             <p className="page-header-desc">
-              Across 500,000 U.S. patents granted between 2000 and 2020[cite: 1], VC-backed patents diverge from
+              Across 500,000 U.S. patents granted between 2000 and 2020, VC-backed patents diverge from
               the non-VC baseline on every measurable axis — citation impact,
-              scientific proximity, legal scope, and responsiveness to policy reform[cite: 1].
+              scientific proximity, legal scope, and responsiveness to policy reform.
               These pages present the four core findings in detail.
             </p>
           </div>
@@ -664,9 +664,9 @@ export default function Findings() {
           {/* ── Footer ── */}
           <footer className="footer">
             <p className="footer-note">
-              Data: 500,000 U.S. patents sampled from 2000-2020 via USPTO Bulk Releases[cite: 1] ·
-              Matched to PitchBook and VentureSource institutional financing rounds[cite: 1].
-              All comparisons utilize Welch's unequal variance formulation[cite: 1].
+              Data: 500,000 U.S. patents sampled from 2000-2020 via USPTO Bulk Releases·
+              Matched to PitchBook and VentureSource institutional financing rounds.
+              All comparisons utilize Welch's unequal variance formulation.
             </p>
             <span className="footer-badge">QSS 20 · 2026</span>
           </footer>
